@@ -1,5 +1,7 @@
 from tkinter import *
 from tkmacosx import Button
+from sqlalchemy.orm import declarative_base, Mapped, mapped_column, Session
+from sqlalchemy import create_engine, select
 window = Tk()
 window.title("Typing Speed Test")
 window.minsize(width=600, height=700)
@@ -9,20 +11,22 @@ text_color = '#8C5A3C'
 window.config(bg=bg_color)
 default_font = ("Arial",26)
 
+base = declarative_base()
+#table for the text that we will be rewriting
+class PaP_Text(base):
+    __tablename__ = "Pride_and_Prejudice"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    text: Mapped[str]
+#the current path of the database
+engine = create_engine("sqlite:///instance/pnp_text.db")
+base.metadata.create_all(engine)
+session = Session(engine)
+#order by id so we have the right order of the text
+pnp_text = select(PaP_Text.text).order_by(PaP_Text.id)
 #the outcome comment meaning the text that comments on the result
 outcome_comment = {20: "Learn the proper typing technique and practice to improve your speed.", 35: "Better, but still below the average", 50:"That is the average typing speed", 65: "You are above the average!", 80: "You would qualify for any typing job! You are really fast!"}
 #the that we are rewriting, each line is added as a separate list elements
-pride_and_prejudice = ['The Bennets were engaged to dine with the Lucases, and again, during the chief of the day, was Miss Lucas so kind as to listen to Mr. Collins.',
-                       'Elizabeth took an opportunity of thanking her. It keeps him in good humour - said she - and I am more obliged to you than I can express.',
-                       'Charlotte assured her friend of her satisfaction in being useful, and that it amply repaid her for the little sacrifice of her time.',
-                       'This was very amiable, but Charlotte’s kindness extended farther than Elizabeth had any conception of its object was nothing less than to secure her from any return of Mr. Collins’s addresses, by engaging them towards herself.',
-                       'Such was Miss Lucas’s scheme, and appearances were so favourable, that when they parted at night, she would have felt almost sure of success if he had not been to leave Hertfordshire so very soon.',
-                       'But here she did injustice to the fire and independence of his character, for it led him to escape out of Longbourn House the next morning with admirable slyness, and hasten to Lucas Lodge to throw himself at her feet.',
-                       'He was anxious to avoid the notice of his cousins, from a conviction that, if they saw him depart, they could not fail to conjecture his design, and he was not willing to have the attempt known till its success could be known likewise, for, though feeling almost secure, and with reason, for Charlotte had been tolerably encouraging, he was comparatively diffident since the adventure of Wednesday.',
-                       'His reception, however, was of the most flattering kind. Miss Lucas perceived him from an upper window as he walked towards the house, and instantly set out to meet him accidentally in the lane.',
-                       'But little had she dared to hope that so much love and eloquence awaited her there.',
-                       'In as short a time as Mr. Collins’s long speeches would allow, everything was settled between them to the satisfaction of both and as they entered the house, he earnestly entreated her to name the day that was to make him the happiest of men and though such a solicitation must be waived for the present, the lady felt no inclination to trifle with his happiness.',
-                       'The stupidity with which he was favoured by nature must guard his courtship from any charm that could make a woman wish for its continuance, and Miss Lucas, who accepted him solely from the pure and disinterested desire of an establishment, cared not how soon that establishment were gained.']
+pride_and_prejudice = session.execute(pnp_text).scalars().all()
 class PNP():
     def __init__(self):
         
